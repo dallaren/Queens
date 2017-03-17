@@ -33,17 +33,42 @@ public class QueensLogic {
 
         board[column][row] = 1;
 
+        //add the queen to the bdd
+        queensBDD.restrict(factory.ithVar(getVar(column,row)));
+
+        updateBoard();
+
         return true;
     }
 
+    private void updateBoard() {
+        //iterate through the entire board
+        for (int col = 0; col < N; col++) {
+            for (int row = 0; row < N; row++) {
+                //if the spot is invalid, mark it as invalid
+                if (isInvalid(col, row)) {
+                    board[col][row] = -1;
+                }
+            }
+        }
+    }
+
+    private boolean isInvalid(int column, int row) {
+        //restrict the BDD by placing a queen at (column,row)
+        BDD test = queensBDD.restrict(factory.ithVar(getVar(column, row)));
+
+        //check if the BDD is unsatisfiable
+        return test.isZero();
+    }
+
     public void initializeGame(int size) {
-        this.N = size;
-        this.board = new int[size][size];
+        N = size;
+        board = new int[N][N];
         initializeBDD();
     }
 
     private void initializeBDD() {
-        this.factory = JFactory.init(2000000,200000);
+        factory = JFactory.init(2000000,200000);
         factory.setVarNum(N * N);
 
         True = factory.one();
@@ -58,9 +83,9 @@ public class QueensLogic {
 
         atLeastOnePerRow();
         atMostOnePerRow();
-        atMostOnePerColumn();
-        atMostOnePerNWDiagonal();
-        atMostOnePerNEDiagonal();
+//        atMostOnePerColumn();
+//        atMostOnePerNWDiagonal();
+//        atMostOnePerNEDiagonal();
     }
 
     private void atLeastOnePerRow() {
@@ -87,7 +112,7 @@ public class QueensLogic {
 
                 for (int k = col+1; k < N; k++) {
                     //(xij -> !x(i+1)j) and (xij -> !x(i+2)j) and...
-                    subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(k,row))));
+                    subsubBDD = subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(k,row))));
                 }
 
                 //make rule for each cell in the row
@@ -108,7 +133,7 @@ public class QueensLogic {
 
                 for (int k = row+1; k < N; k++) {
                     //(xij -> !xi(j+1)) and (xij -> !xi(j+2) and...
-                    subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col,k))));
+                    subsubBDD = subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col,k))));
                 }
 
                 //make rule for each cell in the column
@@ -128,7 +153,7 @@ public class QueensLogic {
                 BDD subsubBDD = True;
 
                 for (int k = 1; k < Math.min(row+1, N-col); k++) {
-                    subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col+k,row-k))));
+                    subsubBDD = subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col+k,row-k))));
                 }
 
                 //make rule for each cell in the column
@@ -148,7 +173,7 @@ public class QueensLogic {
                 BDD subsubBDD = True;
 
                 for (int k = 1; k < Math.min(N-row, N-col); k++) {
-                    subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col+k,row+k))));
+                    subsubBDD = subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col+k,row+k))));
                 }
 
                 //make rule for each cell in the column
