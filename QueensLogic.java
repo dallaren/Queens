@@ -9,7 +9,7 @@
 import net.sf.javabdd.*;
 
 public class QueensLogic {
-    private int size;
+    private int N;
     private int[][] board;
     private BDDFactory factory;
     private BDD True;
@@ -22,26 +22,28 @@ public class QueensLogic {
     }
 
     public void initializeGame(int size) {
-        this.size = size;
+        this.N = size;
         this.board = new int[size][size];
+        initializeBDD();
     }
 
     private void initializeBDD() {
         this.factory = JFactory.init(2000000,200000);
-        factory.setVarNum(size*size);
+        factory.setVarNum(N * N);
 
         True = factory.one();
         False = factory.zero();
-
         queensBDD = True;
+
         addRules();
     }
 
     //add n-queens rules to the bdd
     private void addRules() {
-        //at least one per row rule
 
-        //at most one per row rule
+        atLeastOnePerRow();
+        atMostOnePerRow();
+
 
         //at most one per column rule
 
@@ -49,6 +51,47 @@ public class QueensLogic {
 
         //at most one per NE diagonal rule
 
+    }
+
+    private void atLeastOnePerRow() {
+        for (int row = 0; row < N; row++) {
+            BDD subBDD = False;
+
+            for (int col = 0; col < N; col++) {
+                //at least one queen in each row
+                //xi or xi+1 or...
+                subBDD = subBDD.or(factory.ithVar(getVar(col,row)));
+            }
+
+            //this goes for all rows
+            queensBDD = queensBDD.and(subBDD);
+        }
+    }
+
+    private void atMostOnePerRow() {
+        for (int row = 0; row < N; row++) {
+            BDD subBDD = True;
+
+            for (int col = 0; col < N; col++) {
+                BDD subsubBDD = True;
+
+                for (int k = col+1; k < N; k++) {
+                    //at most one
+                    //(xi -> !xi+1) and (xi -> !xi+2) and...
+                    subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(k,row))));
+                }
+
+                //make rule for each cell in the row
+                subBDD = subBDD.and(subsubBDD);
+            }
+
+            //add all rows
+            queensBDD = queensBDD.and(subBDD);
+        }
+    }
+
+    private int getVar(int column, int row) {
+        return row*N + column;
     }
 
     public int[][] getGameBoard() {
