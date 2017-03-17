@@ -21,6 +21,21 @@ public class QueensLogic {
        //constructor
     }
 
+    public int[][] getGameBoard() {
+        return board;
+    }
+
+    public boolean insertQueen(int column, int row) {
+
+        if (board[column][row] == -1 || board[column][row] == 1) {
+            return true;
+        }
+
+        board[column][row] = 1;
+
+        return true;
+    }
+
     public void initializeGame(int size) {
         this.N = size;
         this.board = new int[size][size];
@@ -45,11 +60,7 @@ public class QueensLogic {
         atMostOnePerRow();
         atMostOnePerColumn();
         atMostOnePerNWDiagonal();
-
-        //at most one per NW diagonal rule
-
-        //at most one per NE diagonal rule
-
+        atMostOnePerNEDiagonal();
     }
 
     private void atLeastOnePerRow() {
@@ -116,39 +127,40 @@ public class QueensLogic {
             for (int col = 0; col < N-1; col++) {
                 BDD subsubBDD = True;
 
-                for (int k = 1; k <= Math.min(row, N-col); k++) {
+                for (int k = 1; k < Math.min(row+1, N-col); k++) {
                     subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col+k,row-k))));
                 }
 
+                //make rule for each cell in the column
                 subBDD = subBDD.and(subsubBDD);
             }
 
+            //add all columns
             queensBDD = queensBDD.and(subBDD);
         }
     }
 
     private void atMostOnePerNEDiagonal() {
-        
+        for (int row = 0; row < N-1; row++) {
+            BDD subBDD = True;
+
+            for (int col = 0; col < N-1; col++) {
+                BDD subsubBDD = True;
+
+                for (int k = 1; k < Math.min(N-row, N-col); k++) {
+                    subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col+k,row+k))));
+                }
+
+                //make rule for each cell in the column
+                subBDD = subBDD.and(subsubBDD);
+            }
+
+            //add all columns
+            queensBDD = queensBDD.and(subBDD);
+        }
     }
 
     private int getVar(int column, int row) {
         return row*N + column;
-    }
-
-    public int[][] getGameBoard() {
-        return board;
-    }
-
-    public boolean insertQueen(int column, int row) {
-
-        if (board[column][row] == -1 || board[column][row] == 1) {
-            return true;
-        }
-        
-        board[column][row] = 1;
-        
-        // put some logic here..
-      
-        return true;
     }
 }
