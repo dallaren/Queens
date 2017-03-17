@@ -44,6 +44,7 @@ public class QueensLogic {
         atLeastOnePerRow();
         atMostOnePerRow();
         atMostOnePerColumn();
+        atMostOnePerNWDiagonal();
 
         //at most one per NW diagonal rule
 
@@ -74,8 +75,7 @@ public class QueensLogic {
                 BDD subsubBDD = True;
 
                 for (int k = col+1; k < N; k++) {
-                    //at most one
-                    //(xi -> !xi+1) and (xi -> !xi+2) and...
+                    //(xij -> !x(i+1)j) and (xij -> !x(i+2)j) and...
                     subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(k,row))));
                 }
 
@@ -95,8 +95,8 @@ public class QueensLogic {
             for (int row = 0; row < N-1; row++) {
                 BDD subsubBDD = True;
 
-                for (int k = 0; k < row+1; k++) {
-
+                for (int k = row+1; k < N; k++) {
+                    //(xij -> !xi(j+1)) and (xij -> !xi(j+2) and...
                     subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col,k))));
                 }
 
@@ -107,6 +107,28 @@ public class QueensLogic {
             //add all columns
             queensBDD = queensBDD.and(subBDD);
         }
+    }
+
+    private void atMostOnePerNWDiagonal() {
+        for (int row = 1; row < N; row++) {
+            BDD subBDD = True;
+
+            for (int col = 0; col < N-1; col++) {
+                BDD subsubBDD = True;
+
+                for (int k = 1; k <= Math.min(row, N-col); k++) {
+                    subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col+k,row-k))));
+                }
+
+                subBDD = subBDD.and(subsubBDD);
+            }
+
+            queensBDD = queensBDD.and(subBDD);
+        }
+    }
+
+    private void atMostOnePerNEDiagonal() {
+        
     }
 
     private int getVar(int column, int row) {
