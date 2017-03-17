@@ -43,9 +43,7 @@ public class QueensLogic {
 
         atLeastOnePerRow();
         atMostOnePerRow();
-
-
-        //at most one per column rule
+        atMostOnePerColumn();
 
         //at most one per NW diagonal rule
 
@@ -72,7 +70,7 @@ public class QueensLogic {
         for (int row = 0; row < N; row++) {
             BDD subBDD = True;
 
-            for (int col = 0; col < N; col++) {
+            for (int col = 0; col < N-1; col++) {
                 BDD subsubBDD = True;
 
                 for (int k = col+1; k < N; k++) {
@@ -86,6 +84,27 @@ public class QueensLogic {
             }
 
             //add all rows
+            queensBDD = queensBDD.and(subBDD);
+        }
+    }
+
+    private void atMostOnePerColumn() {
+        for (int col = 0; col < N; col++) {
+            BDD subBDD = True;
+
+            for (int row = 0; row < N-1; row++) {
+                BDD subsubBDD = True;
+
+                for (int k = 0; k < row+1; k++) {
+
+                    subsubBDD.and(factory.ithVar(getVar(col,row)).imp(factory.nithVar(getVar(col,k))));
+                }
+
+                //make rule for each cell in the column
+                subBDD = subBDD.and(subsubBDD);
+            }
+
+            //add all columns
             queensBDD = queensBDD.and(subBDD);
         }
     }
