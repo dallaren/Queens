@@ -1,7 +1,7 @@
 /**
  * This class implements the logic behind the BDD for the n-queens problem
  * You should implement all the missing methods
- * 
+ *
  * @author Stavros Amanatidis
  *
  */
@@ -34,7 +34,7 @@ public class QueensLogic {
         board[column][row] = 1;
 
         //add the queen to the bdd
-        queensBDD.restrict(factory.ithVar(getVar(column,row)));
+        queensBDD = queensBDD.restrict(factory.ithVar(getVar(column,row)));
 
         updateBoard();
 
@@ -42,12 +42,25 @@ public class QueensLogic {
     }
 
     private void updateBoard() {
+        int invalidCount = 0;
         //iterate through the entire board
         for (int col = 0; col < N; col++) {
             for (int row = 0; row < N; row++) {
                 //if the spot is invalid, mark it as invalid
                 if (isInvalid(col, row)) {
                     board[col][row] = -1;
+                    invalidCount++;
+                }
+            }
+        }
+        //if there is only one solution left then place the rest of the queens on the board
+        if(invalidCount == N*(N - 1)){
+            for (int col = 0; col < N; col++) {
+                for (int row = 0; row < N; row++) {
+                    //if the spot is invalid, mark it as invalid
+                    if (!isInvalid(col, row)) {
+                        board[col][row] = 1;
+                    }
                 }
             }
         }
@@ -65,6 +78,7 @@ public class QueensLogic {
         N = size;
         board = new int[N][N];
         initializeBDD();
+        updateBoard();
     }
 
     private void initializeBDD() {
@@ -83,9 +97,9 @@ public class QueensLogic {
 
         atLeastOnePerRow();
         atMostOnePerRow();
-//        atMostOnePerColumn();
-//        atMostOnePerNWDiagonal();
-//        atMostOnePerNEDiagonal();
+        atMostOnePerColumn();
+        atMostOnePerNWDiagonal();
+        atMostOnePerNEDiagonal();
     }
 
     private void atLeastOnePerRow() {
